@@ -1007,7 +1007,18 @@ namespace Microsoft.Build.Tasks
                     referencePathItem.ItemSpec = wrapperInfo.path;
                     referenceInfo.taskItem.CopyMetadataTo(referencePathItem);
 
+                    File.WriteAllText(@"c:\beforeGetAssemblyName", $"before, tid: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
+
+                    var delayString = Environment.GetEnvironmentVariable("MSBUILD_RESOLVECOMREFERENCE_DELAY");
+                    if (delayString != null && int.TryParse(delayString, out int delay))
+                    {
+                        System.Threading.Thread.Sleep(delay);
+                    }
+
                     string fusionName = AssemblyName.GetAssemblyName(wrapperInfo.path).FullName;
+
+                    File.WriteAllText(@"c:\afterGetAssemblyName", $"before, tid: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
+
                     referencePathItem.SetMetadata(ItemMetadataNames.fusionName, fusionName);
 
                     if (!Silent)
