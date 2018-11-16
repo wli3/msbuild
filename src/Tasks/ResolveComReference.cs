@@ -1007,11 +1007,8 @@ namespace Microsoft.Build.Tasks
                     referencePathItem.ItemSpec = wrapperInfo.path;
                     referenceInfo.taskItem.CopyMetadataTo(referencePathItem);
 
-                    File.WriteAllText(@"c:\beforesleep", $"before, tid: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
-
+                    // work around failure in Office builds "System.IO.FileLoadException: Unexpected change made to file"
                     System.Threading.Thread.Sleep(1_000 /* experimentally seems as short as possible to be functional on a DTL VM */);
-
-                    File.WriteAllText(@"c:\beforeGetAssemblyName", $"before, tid: {System.Threading.Thread.CurrentThread.ManagedThreadId}");
 
                     string fusionName = AssemblyName.GetAssemblyName(wrapperInfo.path).FullName;
 
