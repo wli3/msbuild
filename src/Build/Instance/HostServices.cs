@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.Build.Execution
 {
@@ -103,15 +104,14 @@ namespace Microsoft.Build.Execution
         }
 
         // TODO wul no checkin doc
-        public void RegisterHostObject(string projectFile, string targetName, string taskName, IMoniker moniker)
+        public void RegisterHostObject(string projectFile, string targetName, string taskName, string monikerName)
         {
             ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
             ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
             ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
-            ErrorUtilities.VerifyThrowArgumentNull(moniker, "moniker");
+            ErrorUtilities.VerifyThrowArgumentNull(monikerName, "monikerName");
 
             _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
-
 
             // TODO wul no checkin dedup
             HostObjects hostObjects;
@@ -121,7 +121,7 @@ namespace Microsoft.Build.Execution
                 _hostObjectMap[projectFile] = hostObjects;
             }
 
-            hostObjects.RegisterHostObject(targetName, taskName, hostObject);
+            hostObjects.RegisterHostObject(targetName, taskName, monikerName);
         }
 
         /// <summary>
@@ -249,6 +249,25 @@ namespace Microsoft.Build.Execution
             return NodeAffinity.Any;
         }
 
+        public class MonikerNameOrITaskHost
+        {
+            public ITaskHost TaskHost { get; }
+            public string MonikerName { get; }
+            public bool IsTaskHost { get; } = false;
+            public bool IsMoniker { get; } = false;
+            public MonikerNameOrITaskHost(ITaskHost taskHost)
+            {
+                TaskHost = taskHost;
+                IsTaskHost = true;
+            }
+
+            public MonikerNameOrITaskHost(string monikerName)
+            {
+                MonikerName = monikerName;
+                IsMoniker = true;
+            }
+        }
+
         /// <summary>
         /// Bag holding host object information for a single project file.
         /// </summary>
@@ -258,14 +277,14 @@ namespace Microsoft.Build.Execution
             /// <summary>
             /// The mapping of targets and tasks to host objects.
             /// </summary>
-            private Dictionary<TargetTaskKey, ITaskHost> _hostObjects;
+            private Dictionary<TargetTaskKey, MonikerNameOrITaskHost> _hostObjects;
 
             /// <summary>
             /// Constructor
             /// </summary>
             internal HostObjects()
             {
-                _hostObjects = new Dictionary<TargetTaskKey, ITaskHost>(1);
+                _hostObjects = new Dictionary<TargetTaskKey, MonikerNameOrITaskHost>(1);
             }
 
             /// <summary>
@@ -290,7 +309,20 @@ namespace Microsoft.Build.Execution
                 }
                 else
                 {
-                    _hostObjects[new TargetTaskKey(targetName, taskName)] = hostObject;
+                    _hostObjects[new TargetTaskKey(targetName, taskName)] = new MonikerNameOrITaskHost(hostObject);
+                }
+            }
+
+            // TODO wul no checkin doc
+            internal void RegisterHostObject(string targetName, string taskName, string monikerName)
+            {
+                if (monikerName == null)
+                {
+                    _hostObjects.Remove(new TargetTaskKey(targetName, taskName));
+                }
+                else
+                {
+                    _hostObjects[new TargetTaskKey(targetName, taskName)] = new MonikerNameOrITaskHost(monikerName);
                 }
             }
 
@@ -299,10 +331,17 @@ namespace Microsoft.Build.Execution
             /// </summary>
             internal ITaskHost GetAnyMatchingHostObject(string targetName, string taskName)
             {
-                ITaskHost hostObject;
-                _hostObjects.TryGetValue(new TargetTaskKey(targetName, taskName), out hostObject);
-
-                return hostObject;
+                _hostObjects.TryGetValue(new TargetTaskKey(targetName, taskName), out MonikerNameOrITaskHost hostObject);
+                if (hostObject.IsMoniker)
+                {
+                    RunningObjectTable rot = new RunningObjectTable();
+                    object objectFromRunningObjectTable = rot.GetObject(hostObject.MonikerName);
+                    return (objectFromRunningObjectTable as ITaskHost);
+                }
+                else
+                {
+                    return hostObject.TaskHost;
+                }
             }
 
             /// <summary>
