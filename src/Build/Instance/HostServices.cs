@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Microsoft.Build.Execution
 {
@@ -91,6 +92,28 @@ namespace Microsoft.Build.Execution
             ErrorUtilities.VerifyThrowInvalidOperation(!hasExplicitOutOfProcAffinity || hostObject == null, "InvalidHostObjectOnOutOfProcProject");
             _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
 
+            HostObjects hostObjects;
+            if (!_hostObjectMap.TryGetValue(projectFile, out hostObjects))
+            {
+                hostObjects = new HostObjects();
+                _hostObjectMap[projectFile] = hostObjects;
+            }
+
+            hostObjects.RegisterHostObject(targetName, taskName, hostObject);
+        }
+
+        // TODO wul no checkin doc
+        public void RegisterHostObject(string projectFile, string targetName, string taskName, IMoniker moniker)
+        {
+            ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
+            ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
+            ErrorUtilities.VerifyThrowArgumentNull(taskName, "taskName");
+            ErrorUtilities.VerifyThrowArgumentNull(moniker, "moniker");
+
+            _hostObjectMap = _hostObjectMap ?? new Dictionary<string, HostObjects>(StringComparer.OrdinalIgnoreCase);
+
+
+            // TODO wul no checkin dedup
             HostObjects hostObjects;
             if (!_hostObjectMap.TryGetValue(projectFile, out hostObjects))
             {
