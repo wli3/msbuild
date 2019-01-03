@@ -60,7 +60,7 @@ namespace Microsoft.Build.Execution
             return new RegistrationHandle(this, registration);
         }
 
-        private static IMoniker CreateMoniker(string itemName)
+        public static IMoniker CreateMoniker(string itemName)
         {
             IMoniker mk;
             int result = Ole32.CreateItemMoniker("!", itemName, out mk);
