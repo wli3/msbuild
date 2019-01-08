@@ -427,6 +427,24 @@ namespace Microsoft.Build.UnitTests.BackEnd
             Assert.False(deserializedValue.ContainsKey("FOO"));
         }
 
+        [Fact]
+        public void TestSerializeHostServices()
+        {
+            Dictionary<string, BaseClass> value = new Dictionary<string, BaseClass>();
+            value["foo"] = new BaseClass(1);
+            value["alpha"] = new BaseClass(2);
+
+            TranslationHelpers.GetWriteTranslator().TranslateDictionary<Dictionary<string, BaseClass>, BaseClass>(ref value, BaseClass.FactoryForDeserialization);
+
+            Dictionary<string, BaseClass> deserializedValue = null;
+            TranslationHelpers.GetReadTranslator().TranslateDictionary<Dictionary<string, BaseClass>, BaseClass>(ref deserializedValue, BaseClass.FactoryForDeserialization);
+
+            Assert.Equal(value.Count, deserializedValue.Count);
+            Assert.Equal(0, BaseClass.Comparer.Compare(value["foo"], deserializedValue["foo"]));
+            Assert.Equal(0, BaseClass.Comparer.Compare(value["alpha"], deserializedValue["alpha"]));
+            Assert.False(deserializedValue.ContainsKey("FOO"));
+        }
+
         /// <summary>
         /// Tests serializing a dictionary of { string, T } where T requires a factory to construct and the dictionary
         /// has a default constructor, passing null for the dictionary.
