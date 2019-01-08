@@ -36,4 +36,9 @@
   <ItemGroup>
     <RCResourceFile Include="native.rc" />
   </ItemGroup>
+
+  <Target Name="GenerateTlb"
+           AfterTargets="Build">
+    <Exec Command="&quot;$(SDK40ToolsPath)tlbexp.exe&quot; &quot;$(TargetDir)Microsoft.Build.Framework.dll&quot; &quot;/out:$(TargetDir)Microsoft.Build.Framework.tlb&quot;" />
+  </Target> 
 </Project>

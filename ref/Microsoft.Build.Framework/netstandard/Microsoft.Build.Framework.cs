@@ -304,6 +304,29 @@ namespace Microsoft.Build.Framework
         string GetMetadataValueEscaped(string metadataName);
         void SetMetadataValueLiteral(string metadataName, string metadataValue);
     }
+    [System.Runtime.InteropServices.ComVisibleAttribute(true)]
+    [System.Runtime.InteropServices.GuidAttribute("33372170-A08F-47F9-B1AE-CD9F2C3BB7C9")]
+    [System.Runtime.InteropServices.InterfaceTypeAttribute((System.Runtime.InteropServices.ComInterfaceType)(1))]
+    public partial interface IVsMSBuildTaskFileManager
+    {
+        [System.Security.SecurityCriticalAttribute]
+        [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+        void Delete(string wszFilename);
+        [System.Security.SecurityCriticalAttribute]
+        [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+        bool Exists(string wszFilename, bool fOnlyCheckOnDisk);
+        string GetFileContents(string wszFilename);
+        object GetFileDocData(string wszFilename);
+        [System.Security.SecurityCriticalAttribute]
+        [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+        long GetFileLastChangeTime(string wszFilename);
+        [System.Security.SecurityCriticalAttribute]
+        [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+        bool IsRealBuildOperation();
+        [System.Security.SecurityCriticalAttribute]
+        [System.Security.SuppressUnmanagedCodeSecurityAttribute]
+        void PutGeneratedFileContents(string wszFilename, string strFileContents);
+    }
     public partial class LazyFormattedBuildEventArgs : Microsoft.Build.Framework.BuildEventArgs
     {
         protected LazyFormattedBuildEventArgs() { }
