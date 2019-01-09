@@ -336,7 +336,7 @@ namespace Microsoft.Build.Execution
                 {
                     RunningObjectTable rot = new RunningObjectTable();
                     object objectFromRunningObjectTable = rot.GetObject(hostObject.MonikerName);
-                    return (objectFromRunningObjectTable as ITaskHost);
+                    return (ITaskHost) objectFromRunningObjectTable;
                 }
                 else
                 {
