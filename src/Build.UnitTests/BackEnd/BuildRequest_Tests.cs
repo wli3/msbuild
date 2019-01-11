@@ -159,13 +159,13 @@ namespace Microsoft.Build.UnitTests.BackEnd
         }
 
         [Fact]
-        public void TestTranslation2()
+        public void TestTranslationHostObjects()
         {
             //BuildRequest request = CreateNewBuildRequest(1, new string[] { "alpha", "omega" });
             var hostServices = new HostServices();
 
             var rot = new RunningObjectTable();
-            var moniker = nameof(TestTranslation2) + Guid.NewGuid();
+            var moniker = nameof(TestTranslationHostObjects) + Guid.NewGuid();
             var remoteHost = new TestRemoteHostObject(3);
             using (var result = rot.Register(moniker, remoteHost))
             {

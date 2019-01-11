@@ -264,12 +264,15 @@ namespace Microsoft.Build.Execution
                     var hostObjectMappairKeyTaskName = translator.Reader.ReadString();
                     var hostObjectMappairValueMonikerName = translator.Reader.ReadString();
                     var targetTaskKey = new HostObjects.TargetTaskKey(hostObjectMappairKeyTargetName, hostObjectMappairKeyTaskName);
-                    if (hostObjectMap[pairKey] == null)
+                    if (!hostObjectMap.ContainsKey(pairKey))
                     {
                         hostObjectMap[pairKey] = new HostObjects();
                     }
 
-                    hostObjectMap[pairKey]._hostObjects[targetTaskKey] = new MonikerNameOrITaskHost(hostObjectMappairValueMonikerName);
+                    if (!hostObjectMap[pairKey]._hostObjects.ContainsKey(targetTaskKey))
+                    {
+                        hostObjectMap[pairKey]._hostObjects.Add(targetTaskKey, new MonikerNameOrITaskHost(hostObjectMappairValueMonikerName));
+                    }
                 }
                 _hostObjectMap = hostObjectMap;
             }
