@@ -250,7 +250,7 @@ namespace Microsoft.Build.Execution
             return NodeAffinity.Any;
         }
 
-        internal void Translate(ITranslator translator)
+        void ITranslatable.Translate(ITranslator translator)
         {
             translator.Translate(ref _hostObjectMap);
         }
@@ -358,12 +358,12 @@ namespace Microsoft.Build.Execution
                 /// <summary>
                 /// Target name
                 /// </summary>
-                private string _targetName;
+                internal string _targetName;
 
                 /// <summary>
                 /// Task name
                 /// </summary>
-                private string _taskName;
+                internal string _taskName;
 
                 /// <summary>
                 /// Constructor

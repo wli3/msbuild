@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.BackEnd
@@ -231,6 +232,8 @@ namespace Microsoft.Build.BackEnd
         void TranslateDotNet<T>(ref T value);
 
         void TranslateException(ref Exception value);
+
+        void Translate(ref Dictionary<string, HostServices.HostObjects> hostObjectMap);
 
         /// <summary>
         /// Translates an object implementing INodePacketTranslatable.

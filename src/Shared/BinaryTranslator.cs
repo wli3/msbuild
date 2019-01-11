@@ -19,6 +19,7 @@ using Microsoft.Build.Shared;
 using System.Globalization;
 using System.Reflection;
 using static Microsoft.Build.Execution.HostServices;
+using static Microsoft.Build.Execution.HostServices.HostObjects;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -236,6 +237,32 @@ namespace Microsoft.Build.BackEnd
                 for (int i = 0; i < count; i++)
                 {
                     set.Add(_reader.ReadString());
+                }
+            }
+
+            public void Translate(ref Dictionary<string, HostObjects> hostObjectMap)
+            {
+                if (!TranslateNullable(hostObjectMap))
+                {
+                    return;
+                }
+
+                int count = _reader.ReadInt32();
+
+                hostObjectMap = new Dictionary<string, HostObjects>();
+                for (int i = 0; i < count; i++)
+                {
+                    var pairKey = _reader.ReadString();
+                    var hostObjectMappairKeyTargetName = _reader.ReadString();
+                    var hostObjectMappairKeyTaskName = _reader.ReadString();
+                    var hostObjectMappairValueMonikerName = _reader.ReadString();
+                    var targetTaskKey = new TargetTaskKey(hostObjectMappairKeyTargetName, hostObjectMappairKeyTaskName);
+                    if (hostObjectMap[pairKey] == null)
+                    {
+                        hostObjectMap[pairKey] = new HostObjects();
+                    }
+
+                    hostObjectMap[pairKey]._hostObjects[targetTaskKey] = new MonikerNameOrITaskHost(hostObjectMappairValueMonikerName);
                 }
             }
 
@@ -858,22 +885,40 @@ namespace Microsoft.Build.BackEnd
                 }
             }
 
-            public void Translate(ref Dictionary<string, HostObjects> hostObjects)
+            public void Translate(ref Dictionary<string, HostObjects> hostObjectMap)
             {
-                if (!TranslateNullable(hostObjects))
+                if (!TranslateNullable(hostObjectMap))
                 {
                     return;
                 }
 
-                int count = set.Count;
-                _writer.Write(count);
-
-                foreach (var item in set)
+                var count = 0;
+                foreach (var pair in hostObjectMap)
                 {
-                    _writer.Write(item);
+                    foreach (var hostObjectMappair in pair.Value._hostObjects)
+                    {
+                        if (hostObjectMappair.Value.IsMoniker)
+                        {
+                            count++;
+                        }
+                    }
                 }
 
-                _writer.Write(value);
+                _writer.Write(count);
+
+                foreach (var pair in hostObjectMap)
+                {
+                    foreach (var hostObjectMappair in pair.Value._hostObjects)
+                    {
+                        if (hostObjectMappair.Value.IsMoniker)
+                        {
+                            _writer.Write(pair.Key);
+                            _writer.Write(hostObjectMappair.Key._targetName);
+                            _writer.Write(hostObjectMappair.Key._taskName);
+                            _writer.Write(hostObjectMappair.Value.MonikerName);
+                        }
+                    }
+                }
             }
 
             /// <summary>
