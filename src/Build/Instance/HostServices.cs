@@ -9,6 +9,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices;
+using Microsoft.Build.BackEnd;
 
 namespace Microsoft.Build.Execution
 {
@@ -41,7 +42,7 @@ namespace Microsoft.Build.Execution
     /// mediates access from the build to the host.
     /// </summary>
     [DebuggerDisplay("#Entries={_hostObjectMap.Count}")]
-    public class HostServices
+    public class HostServices : ITranslatable
     {
         /// <summary>
         /// Collection storing host objects for particular project/task/target combinations.
@@ -249,7 +250,12 @@ namespace Microsoft.Build.Execution
             return NodeAffinity.Any;
         }
 
-        public class MonikerNameOrITaskHost
+        internal void Translate(ITranslator translator)
+        {
+            translator.Translate(ref _hostObjectMap);
+        }
+
+        internal class MonikerNameOrITaskHost
         {
             public ITaskHost TaskHost { get; }
             public string MonikerName { get; }
@@ -272,12 +278,12 @@ namespace Microsoft.Build.Execution
         /// Bag holding host object information for a single project file.
         /// </summary>
         [DebuggerDisplay("#HostObjects={_hostObjects.Count}")]
-        private class HostObjects
+        internal class HostObjects
         {
             /// <summary>
             /// The mapping of targets and tasks to host objects.
             /// </summary>
-            private Dictionary<TargetTaskKey, MonikerNameOrITaskHost> _hostObjects;
+            internal Dictionary<TargetTaskKey, MonikerNameOrITaskHost> _hostObjects;
 
             /// <summary>
             /// Constructor
@@ -347,7 +353,7 @@ namespace Microsoft.Build.Execution
             /// <summary>
             /// Equatable key for the table
             /// </summary>
-            private struct TargetTaskKey : IEquatable<TargetTaskKey>
+            internal struct TargetTaskKey : IEquatable<TargetTaskKey>
             {
                 /// <summary>
                 /// Target name

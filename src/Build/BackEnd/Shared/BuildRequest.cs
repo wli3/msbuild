@@ -343,6 +343,7 @@ namespace Microsoft.Build.BackEnd
             translator.TranslateEnum(ref _buildRequestDataFlags, (int)_buildRequestDataFlags);
             translator.Translate(ref _skipNonexistentTargets);
             translator.Translate(ref _requestedProjectState);
+            translator.Translate(ref HostServices);
 
             // UNDONE: (Compat) Serialize the host object.
         }

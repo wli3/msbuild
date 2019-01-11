@@ -18,6 +18,7 @@ using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 using System.Globalization;
 using System.Reflection;
+using static Microsoft.Build.Execution.HostServices;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -855,6 +856,24 @@ namespace Microsoft.Build.BackEnd
                 {
                     _writer.Write(item);
                 }
+            }
+
+            public void Translate(ref Dictionary<string, HostObjects> hostObjects)
+            {
+                if (!TranslateNullable(hostObjects))
+                {
+                    return;
+                }
+
+                int count = set.Count;
+                _writer.Write(count);
+
+                foreach (var item in set)
+                {
+                    _writer.Write(item);
+                }
+
+                _writer.Write(value);
             }
 
             /// <summary>
