@@ -9,6 +9,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices;
+using Microsoft.Build.BackEnd;
 
 namespace Microsoft.Build.Execution
 {
@@ -41,7 +42,7 @@ namespace Microsoft.Build.Execution
     /// mediates access from the build to the host.
     /// </summary>
     [DebuggerDisplay("#Entries={_hostObjectMap.Count}")]
-    public class HostServices
+    public class HostServices : ITranslatable
     {
         /// <summary>
         /// Collection storing host objects for particular project/task/target combinations.
@@ -249,6 +250,62 @@ namespace Microsoft.Build.Execution
             return NodeAffinity.Any;
         }
 
+        void ITranslatable.Translate(ITranslator translator)
+        {
+            if (translator.Mode == TranslationDirection.ReadFromStream)
+            {
+                int count = translator.Reader.ReadInt32();
+
+                var hostObjectMap = new Dictionary<string, HostObjects>();
+                for (int i = 0; i < count; i++)
+                {
+                    var pairKey = translator.Reader.ReadString();
+                    var hostObjectMappairKeyTargetName = translator.Reader.ReadString();
+                    var hostObjectMappairKeyTaskName = translator.Reader.ReadString();
+                    var hostObjectMappairValueMonikerName = translator.Reader.ReadString();
+                    var targetTaskKey = new HostObjects.TargetTaskKey(hostObjectMappairKeyTargetName, hostObjectMappairKeyTaskName);
+                    if (hostObjectMap[pairKey] == null)
+                    {
+                        hostObjectMap[pairKey] = new HostObjects();
+                    }
+
+                    hostObjectMap[pairKey]._hostObjects[targetTaskKey] = new MonikerNameOrITaskHost(hostObjectMappairValueMonikerName);
+                }
+                _hostObjectMap = hostObjectMap;
+            }
+
+            if (translator.Mode == TranslationDirection.WriteToStream)
+            {
+                var count = 0;
+                foreach (var pair in _hostObjectMap)
+                {
+                    foreach (var hostObjectMappair in pair.Value._hostObjects)
+                    {
+                        if (hostObjectMappair.Value.IsMoniker)
+                        {
+                            count++;
+                        }
+                    }
+                }
+
+                translator.Writer.Write(count);
+
+                foreach (var pair in _hostObjectMap)
+                {
+                    foreach (var hostObjectMappair in pair.Value._hostObjects)
+                    {
+                        if (hostObjectMappair.Value.IsMoniker)
+                        {
+                            translator.Writer.Write(pair.Key);
+                            translator.Writer.Write(hostObjectMappair.Key._targetName);
+                            translator.Writer.Write(hostObjectMappair.Key._taskName);
+                            translator.Writer.Write(hostObjectMappair.Value.MonikerName);
+                        }
+                    }
+                }
+            }
+        }
+
         public class MonikerNameOrITaskHost
         {
             public ITaskHost TaskHost { get; }
@@ -277,7 +334,7 @@ namespace Microsoft.Build.Execution
             /// <summary>
             /// The mapping of targets and tasks to host objects.
             /// </summary>
-            private Dictionary<TargetTaskKey, MonikerNameOrITaskHost> _hostObjects;
+            internal Dictionary<TargetTaskKey, MonikerNameOrITaskHost> _hostObjects;
 
             /// <summary>
             /// Constructor
@@ -347,17 +404,17 @@ namespace Microsoft.Build.Execution
             /// <summary>
             /// Equatable key for the table
             /// </summary>
-            private struct TargetTaskKey : IEquatable<TargetTaskKey>
+            internal struct TargetTaskKey : IEquatable<TargetTaskKey>
             {
                 /// <summary>
                 /// Target name
                 /// </summary>
-                private string _targetName;
+                internal string _targetName;
 
                 /// <summary>
                 /// Task name
                 /// </summary>
-                private string _taskName;
+                internal string _taskName;
 
                 /// <summary>
                 /// Constructor
