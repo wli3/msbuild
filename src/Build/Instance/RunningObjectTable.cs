@@ -4,6 +4,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 
 namespace Microsoft.Build.Execution
 {
@@ -16,14 +17,15 @@ namespace Microsoft.Build.Execution
     /// </remarks>
     internal class RunningObjectTable : IDisposable, IRunningObjectTableWrapper
     {
-        private readonly IRunningObjectTable rot;
+        private IRunningObjectTable rot;
         private bool isDisposed = false;
 
         public RunningObjectTable()
         {
-            Ole32.GetRunningObjectTable(0, out this.rot);
+            var mtaThread = new Thread(() => Ole32.GetRunningObjectTable(0, out this.rot));
+            mtaThread.SetApartmentState(ApartmentState.MTA);
+            mtaThread.Start();
         }
-
         public void Dispose()
         {
             if (this.isDisposed)
