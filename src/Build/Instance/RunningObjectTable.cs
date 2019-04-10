@@ -22,6 +22,8 @@ namespace Microsoft.Build.Execution
 
         public RunningObjectTable()
         {
+            // To avoid deadlock, create rot in a MTA thread. And the
+            // object will be MTA
             var tcs = new TaskCompletionSource<IRunningObjectTable>();
             Thread thread = new Thread(() =>
             {
@@ -60,6 +62,8 @@ namespace Microsoft.Build.Execution
 
         private Task<IMoniker> CreateMoniker(string itemName)
         {
+            // To avoid deadlock, create rot in a MTA thread. And the
+            // object will be MTA
             var tcs = new TaskCompletionSource<IMoniker>();
             Thread thread = new Thread(() =>
             {
