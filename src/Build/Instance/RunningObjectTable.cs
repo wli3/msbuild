@@ -5,6 +5,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.Build.Execution
 {
@@ -17,14 +18,29 @@ namespace Microsoft.Build.Execution
     /// </remarks>
     internal class RunningObjectTable : IDisposable, IRunningObjectTableWrapper
     {
-        private IRunningObjectTable rot;
+        private Task<IRunningObjectTable> _runningObjectTableTask;
         private bool isDisposed = false;
 
         public RunningObjectTable()
         {
-            var mtaThread = new Thread(() => Ole32.GetRunningObjectTable(0, out this.rot));
-            mtaThread.SetApartmentState(ApartmentState.MTA);
-            mtaThread.Start();
+            var tcs = new TaskCompletionSource<IRunningObjectTable>();
+            Thread thread = new Thread(() =>
+            {
+                try
+                {
+                    Ole32.GetRunningObjectTable(0, out var rot);
+                    tcs.SetResult(rot);
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+            thread.SetApartmentState(ApartmentState.MTA);
+            thread.Start();
+
+            _runningObjectTableTask = tcs.Task;
+
         }
         public void Dispose()
         {
@@ -33,7 +49,7 @@ namespace Microsoft.Build.Execution
                 return;
             }
 
-            Marshal.ReleaseComObject(this.rot);
+            Marshal.ReleaseComObject(_runningObjectTableTask.Result);
             this.isDisposed = true;
         }
 
@@ -42,8 +58,9 @@ namespace Microsoft.Build.Execution
         /// </summary>
         public object GetObject(string itemName)
         {
-            IMoniker mk = CreateMoniker(itemName);
-            int hr = this.rot.GetObject(mk, out object obj);
+            IMoniker mk = CreateMoniker(itemName).Result;
+            var rot = _runningObjectTableTask.Result;
+            int hr = rot.GetObject(mk, out object obj);
             if (hr != 0)
             {
                 Marshal.ThrowExceptionForHR(hr);
@@ -52,10 +69,25 @@ namespace Microsoft.Build.Execution
             return obj;
         }
 
-        private IMoniker CreateMoniker(string itemName)
+        private Task<IMoniker> CreateMoniker(string itemName)
         {
-            Ole32.CreateItemMoniker("!", itemName, out IMoniker mk);
-            return mk;
+            var tcs = new TaskCompletionSource<IMoniker>();
+            Thread thread = new Thread(() =>
+            {
+                try
+                {
+                    Ole32.CreateItemMoniker("!", itemName, out IMoniker mk);
+                    tcs.SetResult(mk);
+                }
+                catch (Exception e)
+                {
+                    tcs.SetException(e);
+                }
+            });
+            thread.SetApartmentState(ApartmentState.MTA);
+            thread.Start();
+
+            return tcs.Task;
         }
 
         private static class Ole32
