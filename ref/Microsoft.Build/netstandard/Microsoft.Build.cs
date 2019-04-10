@@ -1045,7 +1045,7 @@ namespace Microsoft.Build.Execution
     public partial class HostServices
     {
         public HostServices() { }
-        public Microsoft.Build.Framework.ITaskHost GetHostObject(string projectFile, string targetName, string taskName) { throw null; }
+        public System.Threading.Tasks.Task<Microsoft.Build.Framework.ITaskHost> GetHostObject(string projectFile, string targetName, string taskName) { throw null; }
         public Microsoft.Build.Execution.NodeAffinity GetNodeAffinity(string projectFile) { throw null; }
         public void OnRenameProject(string oldFullPath, string newFullPath) { }
         public void RegisterHostObject(string projectFile, string targetName, string taskName, Microsoft.Build.Framework.ITaskHost hostObject) { }
