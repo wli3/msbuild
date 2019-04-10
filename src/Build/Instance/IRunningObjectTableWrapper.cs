@@ -2,11 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.Build.Execution
 {
-    internal interface IRunningObjectTableWrapper: IDisposable
+    internal interface IRunningObjectTableWrapper
     {
-        object GetObject(string itemName);
+        Task<object> GetObject(string itemName);
     }
 }

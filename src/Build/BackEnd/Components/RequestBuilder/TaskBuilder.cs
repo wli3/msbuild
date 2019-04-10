@@ -159,7 +159,7 @@ namespace Microsoft.Build.BackEnd
 
             if (_taskNode != null && requestEntry.Request.HostServices != null)
             {
-                _taskHostObject = requestEntry.Request.HostServices.GetHostObject(requestEntry.RequestConfiguration.Project.FullPath, loggingContext.Target.Name, _taskNode.Name);
+                _taskHostObject = await requestEntry.Request.HostServices.GetHostObject(requestEntry.RequestConfiguration.Project.FullPath, loggingContext.Target.Name, _taskNode.Name);
             }
 
             _projectFullPath = requestEntry.RequestConfiguration.Project.FullPath;

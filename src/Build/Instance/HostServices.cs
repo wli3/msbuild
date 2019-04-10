@@ -11,6 +11,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices;
 using System.Linq;
 using Microsoft.Build.BackEnd;
+using System.Threading.Tasks;
 
 namespace Microsoft.Build.Execution
 {
@@ -65,7 +66,7 @@ namespace Microsoft.Build.Execution
         /// where the task appears within a target and project with the specified names.
         /// If no host object exists, returns null.
         /// </summary>
-        public ITaskHost GetHostObject(string projectFile, string targetName, string taskName)
+        public async Task<ITaskHost> GetHostObject(string projectFile, string targetName, string taskName)
         {
             ErrorUtilities.VerifyThrowArgumentNull(projectFile, "projectFile");
             ErrorUtilities.VerifyThrowArgumentNull(targetName, "targetName");
@@ -98,7 +99,7 @@ namespace Microsoft.Build.Execution
                     try
                     {
                         object objectFromRunningObjectTable =
-                            _runningObjectTable.Value.GetObject(monikerNameOrITaskHost.MonikerName);
+                            await _runningObjectTable.Value.GetObject(monikerNameOrITaskHost.MonikerName);
                         return (ITaskHost)objectFromRunningObjectTable;
                     }
                     catch (Exception ex) when (ex is COMException || ex is InvalidCastException)
@@ -115,7 +116,7 @@ namespace Microsoft.Build.Execution
                 }
                 else
                 {
-                    return monikerNameOrITaskHost.TaskHost;
+                    return await Task.FromResult(monikerNameOrITaskHost.TaskHost);
                 }
             }
         }

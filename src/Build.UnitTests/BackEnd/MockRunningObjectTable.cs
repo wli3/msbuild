@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Microsoft.Build.Execution;
 
 namespace Microsoft.Build.UnitTests.BackEnd
@@ -16,11 +17,11 @@ namespace Microsoft.Build.UnitTests.BackEnd
         {
         }
 
-        public object GetObject(string itemName)
+        public async Task<object> GetObject(string itemName)
         {
             if (_dictionary.TryGetValue(itemName, out var obj))
             {
-                return obj;
+                return await Task.FromResult(obj);
             }
 
             throw new COMException(

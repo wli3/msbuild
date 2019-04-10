@@ -16,10 +16,9 @@ namespace Microsoft.Build.Execution
     /// <remarks>
     /// See https://docs.microsoft.com/en-us/windows/desktop/api/objidl/nn-objidl-irunningobjecttable.
     /// </remarks>
-    internal class RunningObjectTable : IDisposable, IRunningObjectTableWrapper
+    internal class RunningObjectTable : IRunningObjectTableWrapper
     {
         private Task<IRunningObjectTable> _runningObjectTableTask;
-        private bool isDisposed = false;
 
         public RunningObjectTable()
         {
@@ -42,24 +41,14 @@ namespace Microsoft.Build.Execution
             _runningObjectTableTask = tcs.Task;
 
         }
-        public void Dispose()
-        {
-            if (this.isDisposed)
-            {
-                return;
-            }
-
-            Marshal.ReleaseComObject(_runningObjectTableTask.Result);
-            this.isDisposed = true;
-        }
 
         /// <summary>
         /// Attempts to retrieve an item from the ROT.
         /// </summary>
-        public object GetObject(string itemName)
+        public async Task<object> GetObject(string itemName)
         {
-            IMoniker mk = CreateMoniker(itemName).Result;
-            var rot = _runningObjectTableTask.Result;
+            IMoniker mk = await CreateMoniker(itemName);
+            var rot = await _runningObjectTableTask;
             int hr = rot.GetObject(mk, out object obj);
             if (hr != 0)
             {

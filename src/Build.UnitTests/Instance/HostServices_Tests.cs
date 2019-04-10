@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Xml;
 
 using Microsoft.Build.Evaluation;
@@ -32,7 +33,7 @@ namespace Microsoft.Build.UnitTests.OM.Instance
         /// Test allowed host object registrations
         /// </summary>
         [Fact]
-        public void TestValidHostObjectRegistration()
+        public async Task TestValidHostObjectRegistration()
         {
             HostServices hostServices = new HostServices();
             TestHostObject hostObject = new TestHostObject();
@@ -42,9 +43,9 @@ namespace Microsoft.Build.UnitTests.OM.Instance
             hostServices.RegisterHostObject("foo.proj", "target2", "task", hostObject2);
             hostServices.RegisterHostObject("foo.proj", "target", "task2", hostObject3);
 
-            Assert.Same(hostObject, hostServices.GetHostObject("foo.proj", "target", "task"));
-            Assert.Same(hostObject2, hostServices.GetHostObject("foo.proj", "target2", "task"));
-            Assert.Same(hostObject3, hostServices.GetHostObject("foo.proj", "target", "task2"));
+            Assert.Same(hostObject, await hostServices.GetHostObject("foo.proj", "target", "task"));
+            Assert.Same(hostObject2, await hostServices.GetHostObject("foo.proj", "target2", "task"));
+            Assert.Same(hostObject3, await hostServices.GetHostObject("foo.proj", "target", "task2"));
         }
 
         /// <summary>
@@ -93,15 +94,15 @@ namespace Microsoft.Build.UnitTests.OM.Instance
         /// Test which verifies host object unregistration.
         /// </summary>
         [Fact]
-        public void TestUnregisterHostObject()
+        public async Task TestUnregisterHostObject()
         {
             HostServices hostServices = new HostServices();
             TestHostObject hostObject = new TestHostObject();
             hostServices.RegisterHostObject("project", "target", "task", hostObject);
-            Assert.Same(hostObject, hostServices.GetHostObject("project", "target", "task"));
+            Assert.Same(hostObject, await hostServices.GetHostObject("project", "target", "task"));
 
             hostServices.RegisterHostObject("project", "target", "task", hostObject: null);
-            Assert.Null(hostServices.GetHostObject("project", "target", "task"));
+            Assert.Null(await hostServices.GetHostObject("project", "target", "task"));
         }
 
         /// <summary>
@@ -450,7 +451,7 @@ namespace Microsoft.Build.UnitTests.OM.Instance
         /// Tests that register overrides existing reigsted remote host object.
         /// </summary>
         [Fact]
-        public void TestRegisterOverrideExistingRegisted()
+        public async Task TestRegisterOverrideExistingRegisted()
         {
             var hostServices = new HostServices();
             var rot = new MockRunningObjectTable();
@@ -470,7 +471,7 @@ namespace Microsoft.Build.UnitTests.OM.Instance
 
             hostServices.RegisterHostObject("project", "test", "Message", moniker);
             hostServices.RegisterHostObject("project", "test", "Message", newMoniker);
-            var resultObject = (ITestRemoteHostObject)hostServices.GetHostObject("project", "test", "Message");
+            var resultObject = (ITestRemoteHostObject) await hostServices.GetHostObject("project", "test", "Message");
 
             resultObject.GetState().ShouldBe(2);
         }

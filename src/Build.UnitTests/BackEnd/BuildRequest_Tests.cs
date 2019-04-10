@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
@@ -139,7 +140,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
 
 #if FEATURE_COM_INTEROP
         [Fact]
-        public void TestTranslationRemoteHostObjects()
+        public async Task TestTranslationRemoteHostObjects()
         {
             var stateInHostObject = 3;
 
@@ -170,7 +171,7 @@ namespace Microsoft.Build.UnitTests.BackEnd
 
                 BuildRequest deserializedRequest = packet as BuildRequest;
                 deserializedRequest.HostServices.SetTestRunningObjectTable(rot);
-                var hostObject = deserializedRequest.HostServices.GetHostObject(
+                var hostObject = await deserializedRequest.HostServices.GetHostObject(
                     "WithOutOfProc.targets",
                     "DisplayMessages",
                     "ATask") as ITestRemoteHostObject;
