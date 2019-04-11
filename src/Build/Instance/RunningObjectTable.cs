@@ -18,7 +18,7 @@ namespace Microsoft.Build.Execution
     /// </remarks>
     internal class RunningObjectTable : IRunningObjectTableWrapper
     {
-        private Task<IRunningObjectTable> _runningObjectTableTask;
+        private readonly Task<IRunningObjectTable> _runningObjectTableTask;
 
         public RunningObjectTable()
         {
@@ -41,7 +41,6 @@ namespace Microsoft.Build.Execution
             thread.Start();
 
             _runningObjectTableTask = tcs.Task;
-
         }
 
         /// <summary>
@@ -62,7 +61,7 @@ namespace Microsoft.Build.Execution
 
         private Task<IMoniker> CreateMoniker(string itemName)
         {
-            // To avoid deadlock, create rot in a MTA thread. And the
+            // To avoid deadlock, create Moniker in a MTA thread. And the
             // object will be MTA
             var tcs = new TaskCompletionSource<IMoniker>();
             Thread thread = new Thread(() =>
